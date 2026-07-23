@@ -7,13 +7,33 @@ import { TokenResponseDto } from './dto/token-response.dto';
 
 const SALT_ROUNDS = 12;
 
+interface JwtSettings {
+  accessSecret: string;
+  accessTtl: string;
+  refreshSecret: string;
+  refreshTtl: string;
+}
+
 @Injectable()
 export class AuthService {
+  private readonly jwtSettings: JwtSettings;
+
   constructor(
     private readonly users: UsersService,
     private readonly jwt: JwtService,
-    private readonly config: ConfigService,
-  ) {}
+    config: ConfigService,
+  ) {
+    // Read once at construction instead of on every token issuance: these
+    // values are static for the process lifetime, and asserting them here
+    // turns a misconfiguration into a clear boot-time error instead of an
+    // opaque jwt.sign() failure the first time someone logs in.
+    this.jwtSettings = {
+      accessSecret: this.requireConfig(config, 'jwt.accessSecret'),
+      accessTtl: this.requireConfig(config, 'jwt.accessTtl'),
+      refreshSecret: this.requireConfig(config, 'jwt.refreshSecret'),
+      refreshTtl: this.requireConfig(config, 'jwt.refreshTtl'),
+    };
+  }
 
   async register(email: string, password: string): Promise<TokenResponseDto> {
     const existing = await this.users.findByEmail(email);
@@ -63,18 +83,26 @@ export class AuthService {
     const payload = { sub: userId, email };
 
     const accessToken = this.jwt.sign(payload, {
-      secret: this.config.get<string>('jwt.accessSecret'),
-      expiresIn: this.config.get<string>('jwt.accessTtl'),
+      secret: this.jwtSettings.accessSecret,
+      expiresIn: this.jwtSettings.accessTtl,
     });
 
     const refreshToken = this.jwt.sign(payload, {
-      secret: this.config.get<string>('jwt.refreshSecret'),
-      expiresIn: this.config.get<string>('jwt.refreshTtl'),
+      secret: this.jwtSettings.refreshSecret,
+      expiresIn: this.jwtSettings.refreshTtl,
     });
 
     const refreshTokenHash = await bcrypt.hash(refreshToken, SALT_ROUNDS);
     await this.users.setRefreshTokenHash(userId, refreshTokenHash);
 
     return { accessToken, refreshToken };
+  }
+
+  private requireConfig(config: ConfigService, key: string): string {
+    const value = config.get<string>(key);
+    if (!value) {
+      throw new Error(`Missing required config: ${key}`);
+    }
+    return value;
   }
 }
