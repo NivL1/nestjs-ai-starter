@@ -11,13 +11,18 @@ export class RedisHealthIndicator {
     try {
       const pong = await this.redis.ping();
       const healthy = pong === 'PONG';
-      const result = { [key]: { status: healthy ? 'up' : 'down' } };
+      // Explicitly typed so 'up'/'down' are narrowed to the
+      // HealthIndicatorStatus literal union instead of widening to
+      // `string`, which is what tsc rejected here.
+      const result: HealthIndicatorResult = { [key]: { status: healthy ? 'up' : 'down' } };
       if (!healthy) {
         throw new HealthCheckError('Redis ping failed', result);
       }
       return result;
     } catch (err) {
-      const result = { [key]: { status: 'down', message: (err as Error).message } };
+      const result: HealthIndicatorResult = {
+        [key]: { status: 'down', message: (err as Error).message },
+      };
       throw new HealthCheckError('Redis check failed', result);
     }
   }
