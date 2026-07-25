@@ -1,5 +1,6 @@
 import { Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { EmbeddingCacheService } from './embedding-cache.service';
 import { EMBEDDINGS_PROVIDER } from './embeddings.constants';
 import { EmbeddingsProvider } from './interfaces/embeddings-provider.interface';
 import { LocalEmbeddingsProvider } from './providers/local-embeddings.provider';
@@ -22,7 +23,8 @@ import { LocalEmbeddingsProvider } from './providers/local-embeddings.provider';
         }
       },
     },
+    EmbeddingCacheService,
   ],
-  exports: [EMBEDDINGS_PROVIDER],
+  exports: [EmbeddingCacheService],
 })
 export class EmbeddingsModule {}
