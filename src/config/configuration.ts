@@ -40,9 +40,9 @@ export class EnvironmentVariables {
   @IsOptional()
   JWT_REFRESH_TTL: string = '7d';
 
-  @IsIn(['openai'])
+  @IsIn(['openai', 'local'])
   @IsOptional()
-  EMBEDDINGS_PROVIDER: string = 'openai';
+  EMBEDDINGS_PROVIDER: string = 'local';
 
   @IsString()
   @IsOptional()
