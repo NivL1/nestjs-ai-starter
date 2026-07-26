@@ -1,11 +1,14 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-const EMBEDDING_DIMENSIONS = parseInt(process.env.EMBEDDING_DIMENSIONS ?? '1536', 10);
-
 export class CreateDocumentsTable1733000000000 implements MigrationInterface {
   name = 'CreateDocumentsTable1733000000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // Read at execution time rather than module-load time: this file is
+    // only ever imported after data-source.ts's dotenv config() call runs
+    // (verified), but reading here doesn't rely on that import ordering.
+    const dimensions = parseInt(process.env.EMBEDDING_DIMENSIONS ?? '1536', 10);
+
     await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "vector"`);
 
     await queryRunner.query(`
@@ -13,7 +16,7 @@ export class CreateDocumentsTable1733000000000 implements MigrationInterface {
         "id" uuid NOT NULL DEFAULT gen_random_uuid(),
         "content" text NOT NULL,
         "metadata" jsonb NOT NULL DEFAULT '{}',
-        "embedding" vector(${EMBEDDING_DIMENSIONS}) NOT NULL,
+        "embedding" vector(${dimensions}) NOT NULL,
         "created_at" timestamptz NOT NULL DEFAULT now(),
         CONSTRAINT "PK_documents_id" PRIMARY KEY ("id")
       )

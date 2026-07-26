@@ -43,7 +43,7 @@ export class SearchService {
       `SELECT "id", "content", "metadata", "created_at" AS "createdAt",
               "embedding" <=> $1::vector AS "distance"
        FROM "documents"
-       ORDER BY "embedding" <=> $1::vector
+       ORDER BY "distance"
        LIMIT $2`,
       [toVectorLiteral(embedding), limit],
     );
