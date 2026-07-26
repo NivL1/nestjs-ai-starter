@@ -38,7 +38,7 @@ export class EmbeddingCacheService {
   }
 
   private cacheKey(text: string): string {
-    const providerName = this.config.get<string>('embeddings.provider');
+    const providerName = this.config.get<string>('embeddings.provider') ?? 'unknown';
     const hash = createHash('sha256').update(text).digest('hex');
     return `embedding:${providerName}:${hash}`;
   }
