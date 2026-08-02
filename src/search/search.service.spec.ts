@@ -19,17 +19,21 @@ describe('SearchService', () => {
   describe('ingest', () => {
     it('embeds the content and inserts a row with the vector cast to ::vector', async () => {
       embeddings.embed.mockResolvedValue([0.1, 0.2, 0.3]);
-      const inserted = { id: '1', content: 'hi', metadata: { source: 'test' }, createdAt: new Date() };
+      const inserted = {
+        id: '1',
+        content: 'hi',
+        metadata: { source: 'test' },
+        createdAt: new Date(),
+      };
       dataSource.query.mockResolvedValue([inserted]);
 
       const result = await service.ingest('hi', { source: 'test' });
 
       expect(embeddings.embed).toHaveBeenCalledWith('hi');
-      expect(dataSource.query).toHaveBeenCalledWith(expect.stringContaining('INSERT INTO "documents"'), [
-        'hi',
-        JSON.stringify({ source: 'test' }),
-        '[0.1,0.2,0.3]',
-      ]);
+      expect(dataSource.query).toHaveBeenCalledWith(
+        expect.stringContaining('INSERT INTO "documents"'),
+        ['hi', JSON.stringify({ source: 'test' }), '[0.1,0.2,0.3]'],
+      );
       expect(result).toEqual(inserted);
     });
 
