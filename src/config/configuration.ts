@@ -73,9 +73,7 @@ export function validateEnv(config: Record<string, unknown>): EnvironmentVariabl
 
   const errors = validateSync(validated, { skipMissingProperties: false });
   if (errors.length > 0) {
-    const messages = errors
-      .flatMap((error) => Object.values(error.constraints ?? {}))
-      .join('\n');
+    const messages = errors.flatMap((error) => Object.values(error.constraints ?? {})).join('\n');
     throw new Error(`Config validation error:\n${messages}`);
   }
 
