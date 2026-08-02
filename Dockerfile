@@ -2,9 +2,14 @@
 
 FROM node:20-alpine AS builder
 WORKDIR /app
-COPY package.json package-lock.json ./
+# --chown matters here: several source dotfiles (tsconfig.json,
+# .eslintrc.js) are 600 on disk. COPY preserves that mode, and once
+# root-owned in the image the non-root `node` user below can't read them
+# — which breaks ts-node at *runtime* for anything using this stage
+# directly (e.g. the `migrate` compose service running migration:run).
+COPY --chown=node:node package.json package-lock.json ./
 RUN npm ci
-COPY . .
+COPY --chown=node:node . .
 RUN npm run build
 USER node
 
