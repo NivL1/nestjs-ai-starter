@@ -1,4 +1,4 @@
-import { plainToInstance } from 'class-transformer';
+import { plainToInstance, Transform } from 'class-transformer';
 import { IsBoolean, IsIn, IsInt, IsOptional, IsString, Min, validateSync } from 'class-validator';
 
 export class EnvironmentVariables {
@@ -16,6 +16,11 @@ export class EnvironmentVariables {
 
   @IsBoolean()
   @IsOptional()
+  // `enableImplicitConversion` runs its own naive `Boolean(value)` coercion
+  // before this decorator sees `value`, so "false" (any non-empty string)
+  // already comes in as `true` by the time a `value`-based Transform would
+  // run. Reading the untouched string straight off `obj` avoids that.
+  @Transform(({ obj }) => obj.DATABASE_SSL === 'true')
   DATABASE_SSL: boolean = false;
 
   @IsString()
@@ -35,9 +40,9 @@ export class EnvironmentVariables {
   @IsOptional()
   JWT_REFRESH_TTL: string = '7d';
 
-  @IsIn(['openai'])
+  @IsIn(['openai', 'local'])
   @IsOptional()
-  EMBEDDINGS_PROVIDER: string = 'openai';
+  EMBEDDINGS_PROVIDER: string = 'local';
 
   @IsString()
   @IsOptional()
@@ -68,9 +73,7 @@ export function validateEnv(config: Record<string, unknown>): EnvironmentVariabl
 
   const errors = validateSync(validated, { skipMissingProperties: false });
   if (errors.length > 0) {
-    const messages = errors
-      .flatMap((error) => Object.values(error.constraints ?? {}))
-      .join('\n');
+    const messages = errors.flatMap((error) => Object.values(error.constraints ?? {})).join('\n');
     throw new Error(`Config validation error:\n${messages}`);
   }
 

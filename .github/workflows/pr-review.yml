@@ -18,8 +18,8 @@ jobs:
         # Pinned to a commit SHA (not @master) so a future push to that
         # branch can't silently change what runs in this CI job with
         # access to ANTHROPIC_API_KEY / GITHUB_TOKEN. Bump deliberately:
-        # https://github.com/NivL1/ai-pr-reviewer/commit/565feb257f8c481c568e616f2b8b17b130ee795c
-        uses: NivL1/ai-pr-reviewer@565feb257f8c481c568e616f2b8b17b130ee795c
+        # https://github.com/NivL1/ai-pr-reviewer/releases/tag/v0.1.1
+        uses: NivL1/ai-pr-reviewer@e8ea28ffd8424b22f8b72a467528e2bbc7339128
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
