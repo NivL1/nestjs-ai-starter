@@ -48,9 +48,7 @@ describe('AuthService', () => {
     it('throws ConflictException when the email is already registered', async () => {
       users.findByEmail.mockResolvedValue({ id: '1', email: 'a@b.com' });
 
-      await expect(service.register('a@b.com', 'password123')).rejects.toThrow(
-        ConflictException,
-      );
+      await expect(service.register('a@b.com', 'password123')).rejects.toThrow(ConflictException);
       expect(users.create).not.toHaveBeenCalled();
     });
 
@@ -101,9 +99,7 @@ describe('AuthService', () => {
     it('throws UnauthorizedException when the user has no stored refresh token hash', async () => {
       users.findById.mockResolvedValue({ id: 'user-1', email: 'a@b.com', refreshTokenHash: null });
 
-      await expect(service.refresh('user-1', 'some-token')).rejects.toThrow(
-        UnauthorizedException,
-      );
+      await expect(service.refresh('user-1', 'some-token')).rejects.toThrow(UnauthorizedException);
     });
 
     it('throws UnauthorizedException when the presented token does not match the stored hash', async () => {
