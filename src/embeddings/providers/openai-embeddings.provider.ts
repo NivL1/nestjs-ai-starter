@@ -38,6 +38,9 @@ export class OpenAiEmbeddingsProvider implements EmbeddingsProvider {
     }
 
     const body = (await response.json()) as OpenAiEmbeddingsResponse;
+    if (!body.data?.[0]) {
+      throw new Error('OpenAI embeddings response contained no data');
+    }
     return body.data[0].embedding;
   }
 }

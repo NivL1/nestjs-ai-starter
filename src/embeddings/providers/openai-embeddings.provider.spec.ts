@@ -54,4 +54,11 @@ describe('OpenAiEmbeddingsProvider', () => {
 
     await expect(provider.embed('hello')).rejects.toThrow(/401.*invalid api key/);
   });
+
+  it('throws a clear error instead of returning undefined when the response has no data', async () => {
+    config.get.mockReturnValue('sk-test');
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ data: [] }) });
+
+    await expect(provider.embed('hello')).rejects.toThrow(/no data/);
+  });
 });

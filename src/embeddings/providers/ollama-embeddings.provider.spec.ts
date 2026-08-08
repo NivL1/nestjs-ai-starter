@@ -51,4 +51,11 @@ describe('OllamaEmbeddingsProvider', () => {
 
     await expect(provider.embed('hello')).rejects.toThrow(/404.*model not found/);
   });
+
+  it('throws a clear error instead of returning undefined when the response has no embedding field', async () => {
+    config.get.mockReturnValue(undefined);
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({}) });
+
+    await expect(provider.embed('hello')).rejects.toThrow(/no embedding field/);
+  });
 });

@@ -34,6 +34,9 @@ export class OllamaEmbeddingsProvider implements EmbeddingsProvider {
     }
 
     const body = (await response.json()) as OllamaEmbeddingsResponse;
+    if (!body.embedding) {
+      throw new Error('Ollama embeddings response contained no embedding field');
+    }
     return body.embedding;
   }
 }
