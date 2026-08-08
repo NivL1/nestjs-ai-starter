@@ -30,7 +30,16 @@ The `documents` migration originally created its `ivfflat` index with `lists = 1
 
 ## Pluggable embeddings provider
 
-`EmbeddingsProvider` (`src/embeddings/interfaces/embeddings-provider.interface.ts`) is a one-method interface — `embed(text) -> number[]`. The shipped implementation, `LocalEmbeddingsProvider`, is a deterministic hash-seeded stub: same text always produces the same vector, no network call, no API key, so the whole pipeline (cache, storage, similarity search) can be built, tested, and demoed without a paid dependency. It carries no real semantic meaning, though — a real provider (OpenAI or otherwise) drops in behind the same interface as a second implementation, selected by `EMBEDDINGS_PROVIDER` in config, with no changes needed anywhere that calls `EmbeddingCacheService`.
+`EmbeddingsProvider` (`src/embeddings/interfaces/embeddings-provider.interface.ts`) is a one-method interface — `embed(text) -> number[]`. Four implementations ship behind it, selected by `EMBEDDINGS_PROVIDER` in config with no changes needed anywhere that calls `EmbeddingCacheService`:
+
+- **`onnx`** (default) — `OnnxEmbeddingsProvider` runs a real sentence-embedding model (`Xenova/all-MiniLM-L6-v2`, 384 dims) locally via `@xenova/transformers` (ONNX runtime, pure JS/WASM). No API key, no per-request network call, free. The model is downloaded and cached on first use; the pipeline is built once per process, not per request.
+- **`openai`** — `OpenAiEmbeddingsProvider` calls OpenAI's embeddings API directly via `fetch` (no SDK dependency). Needs `OPENAI_API_KEY`.
+- **`ollama`** — `OllamaEmbeddingsProvider` calls a local (or self-hosted) Ollama server's `/api/embeddings`. Free and private, but requires Ollama running with the model pulled separately.
+- **`stub`** — `StubEmbeddingsProvider`, the original deterministic hash-seeded vector generator: same text always produces the same vector, no network call, no model download. Carries no real semantic meaning — useful for exercising the pipeline (cache, storage, similarity search) fast in tests, not for anything that needs real search quality.
+
+`EMBEDDING_DIMENSIONS` must match whichever provider is active (`onnx`: 384, `openai`/`text-embedding-3-small`: 1536, `ollama`/`nomic-embed-text`: 768) — it's baked into the `documents.embedding` column's size at migration time (`src/database/migrations/1733000000000-CreateDocumentsTable.ts`), so switching providers with a different dimension count after documents already exist means re-running that migration and re-ingesting, not just flipping an env var.
+
+One Docker-specific gotcha this surfaced: `onnxruntime-node`'s native binding (pulled in transitively by `@xenova/transformers`) ships prebuilt against glibc and fails to load under Alpine's musl libc (`Error loading shared library ld-linux-aarch64.so.1`) — this is why the Dockerfile's base image is `node:20-slim` (Debian, glibc), not `node:20-alpine`.
 
 ## Ops
 

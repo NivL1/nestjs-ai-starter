@@ -40,9 +40,13 @@ export class EnvironmentVariables {
   @IsOptional()
   JWT_REFRESH_TTL: string = '7d';
 
-  @IsIn(['openai', 'local'])
+  @IsIn(['onnx', 'openai', 'ollama', 'stub'])
   @IsOptional()
-  EMBEDDINGS_PROVIDER: string = 'local';
+  EMBEDDINGS_PROVIDER: string = 'onnx';
+
+  @IsString()
+  @IsOptional()
+  ONNX_EMBEDDING_MODEL: string = 'Xenova/all-MiniLM-L6-v2';
 
   @IsString()
   @IsOptional()
@@ -52,9 +56,21 @@ export class EnvironmentVariables {
   @IsOptional()
   OPENAI_EMBEDDING_MODEL: string = 'text-embedding-3-small';
 
+  @IsString()
+  @IsOptional()
+  OLLAMA_BASE_URL: string = 'http://localhost:11434';
+
+  @IsString()
+  @IsOptional()
+  OLLAMA_EMBEDDING_MODEL: string = 'nomic-embed-text';
+
+  // Must match the output size of whichever EMBEDDINGS_PROVIDER is active —
+  // onnx/all-MiniLM-L6-v2: 384, openai/text-embedding-3-small: 1536,
+  // ollama/nomic-embed-text: 768. Wrong value fails inserts into the
+  // pgvector `documents.embedding` column (sized at migration time).
   @IsInt()
   @IsOptional()
-  EMBEDDING_DIMENSIONS: number = 1536;
+  EMBEDDING_DIMENSIONS: number = 384;
 
   @IsInt()
   @IsOptional()
@@ -93,8 +109,11 @@ export interface AppConfig {
   };
   embeddings: {
     provider: string;
+    onnxModel: string;
     openaiApiKey: string;
     openaiModel: string;
+    ollamaBaseUrl: string;
+    ollamaModel: string;
     dimensions: number;
     cacheTtlSeconds: number;
   };
@@ -118,10 +137,13 @@ export function configuration(): AppConfig {
       refreshTtl: process.env.JWT_REFRESH_TTL ?? '7d',
     },
     embeddings: {
-      provider: process.env.EMBEDDINGS_PROVIDER ?? 'openai',
+      provider: process.env.EMBEDDINGS_PROVIDER ?? 'onnx',
+      onnxModel: process.env.ONNX_EMBEDDING_MODEL ?? 'Xenova/all-MiniLM-L6-v2',
       openaiApiKey: process.env.OPENAI_API_KEY ?? '',
       openaiModel: process.env.OPENAI_EMBEDDING_MODEL ?? 'text-embedding-3-small',
-      dimensions: parseInt(process.env.EMBEDDING_DIMENSIONS ?? '1536', 10),
+      ollamaBaseUrl: process.env.OLLAMA_BASE_URL ?? 'http://localhost:11434',
+      ollamaModel: process.env.OLLAMA_EMBEDDING_MODEL ?? 'nomic-embed-text',
+      dimensions: parseInt(process.env.EMBEDDING_DIMENSIONS ?? '384', 10),
       cacheTtlSeconds: parseInt(process.env.EMBEDDING_CACHE_TTL_SECONDS ?? '2592000', 10),
     },
   };
