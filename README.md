@@ -75,7 +75,7 @@ Everything except `/auth/register`, `/auth/login`, `/auth/refresh`, and `/health
 | POST   | `/search/documents`  | Bearer        | Embed and store a document                        |
 | GET    | `/search?q=&limit=`  | Bearer        | Embed the query, return top-k by cosine distance  |
 
-The embeddings provider defaults to a deterministic local stub (`EMBEDDINGS_PROVIDER=local`, no API key needed) — see [docs/architecture.md](docs/architecture.md) for why, and how to swap in a real provider.
+The embeddings provider defaults to `onnx` — a real sentence-embedding model (`all-MiniLM-L6-v2`) running locally via `@xenova/transformers`, no API key needed. `openai` and `ollama` are also built in, and a deterministic `stub` provider exists for fast tests/CI. See [docs/architecture.md](docs/architecture.md) for how to switch.
 
 ## Testing & CI
 

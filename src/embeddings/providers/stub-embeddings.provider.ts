@@ -5,14 +5,14 @@ import { EmbeddingsProvider } from '../interfaces/embeddings-provider.interface'
 
 /**
  * Deterministic, dependency-free embeddings provider: the same text always
- * maps to the same vector, with no network call and no API key. The vector
- * carries no real semantic meaning — it exists to exercise the ingest /
- * cache / pgvector-search pipeline end to end. Swap in a real provider
- * (e.g. OpenAI) behind the same EmbeddingsProvider interface for anything
- * beyond that.
+ * maps to the same vector, with no network call, no API key, and no model
+ * download. The vector carries no real semantic meaning — it exists to
+ * exercise the ingest / cache / pgvector-search pipeline end to end (e.g.
+ * in CI, where downloading an ONNX model isn't worth the time). Use
+ * EMBEDDINGS_PROVIDER=onnx/openai/ollama for anything beyond that.
  */
 @Injectable()
-export class LocalEmbeddingsProvider implements EmbeddingsProvider {
+export class StubEmbeddingsProvider implements EmbeddingsProvider {
   constructor(private readonly config: ConfigService) {}
 
   embed(text: string): Promise<number[]> {
